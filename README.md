@@ -48,7 +48,7 @@ python BackFlip_GUI.py
 
 ### Option 2: Standalone Executable (Windows)
 
-Download the latest executable from [Releases](https://github.com/FranTassara/confocal-compositor/releases).
+Download the latest executable from [Releases](https://github.com/FranTassara/BackFlip/releases/tag/v1.0.0).
 
 **Windows**: `BackFlip_App_v1.0_Windows.exe` (128 MB)  
 
