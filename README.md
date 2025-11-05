@@ -32,8 +32,8 @@ A PyQt-based GUI tool for compositing multi-channel confocal microscopy images w
 ### Option 1: From Source
 ```bash
 # Clone the repository
-git clone https://github.com/FranTassara/backgroundBW.git
-cd confocal-compositor
+git clone https://github.com/FranTassara/BackFlip.git
+cd BackFlip
 
 # Create virtual environment (recommended)
 python -m venv venv
@@ -43,14 +43,14 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 # Run the application
-python confocal_compositor.py
+python BackFlip_GUI.py
 ```
 
 ### Option 2: Standalone Executable (Windows)
 
 Download the latest executable from [Releases](https://github.com/FranTassara/confocal-compositor/releases).
 
-**Windows**: `Confocal_Compositor_v1.0_Windows.exe` (XXX MB)  
+**Windows**: `BackFlip_App_v1.0_Windows.exe` (128 MB)  
 
 ## Usage
 
