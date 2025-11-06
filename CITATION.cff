@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use BackFlip in your research, please cite it using the metadata from this file."
+type: software
+title: "BackFlip: A Tool for Publication-Ready Fluorescence Microscopy Figures"
+version: 1.0.0
+authors:
+  - family-names: "Tassara"
+    given-names: "Francisco Joaquin"
+    affiliation: "Fundación Instituto Leloir"
+    orcid: "https://orcid.org/0009-0003-3549-5672"
+doi: 10.5281/zenodo.17536854
+date-released: 2025-11-06
+url: "https://github.com/FranTassara/BackFlip"
+repository-code: "https://github.com/FranTassara/BackFlip"
+keywords:
+  - microscopy
+  - confocal
+  - image-processing
+  - fluorescence
+  - scientific-visualization
+license: MIT
