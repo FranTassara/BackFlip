@@ -24,7 +24,7 @@ A PyQt-based GUI tool for compositing multi-channel confocal microscopy images w
 
 ## Screenshots
 
-![Main Interface](docs/images/screenshot_main.png)
+![Main Interface](docs/images/screenshot_main.PNG)
 
 ### Before & After
 | Black Background | White Background |
