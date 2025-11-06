@@ -179,56 +179,6 @@ def ezreverse(image_rgb, tolerance=30):
 
 ---
 
-## Performance Comparisons
-
-| Algorithm | Speed | Memory | Color Accuracy | Artifact Risk |
-|-----------|-------|--------|----------------|---------------|
-| Landini | ⚡⚡⚡ Fast | Low | Good | Low |
-| HSL | ⚡⚡ Medium | Medium | Excellent | Very Low |
-| YIQ | ⚡⚡ Medium | Medium | Very Good | Low |
-| CIELab | ⚡ Slower | High | Excellent | Very Low |
-| ezReverse | ⚡⚡⚡ Fast | Low | Perfect (colors) | Medium |
-
-### Benchmark Results
-
-Tested on a 2048×2048 pixel, 3-channel confocal image:
-
-| Algorithm | Processing Time | Peak Memory |
-|-----------|----------------|-------------|
-| Landini | 45 ms | 24 MB |
-| HSL | 180 ms | 48 MB |
-| YIQ | 165 ms | 48 MB |
-| CIELab | 320 ms | 72 MB |
-| ezReverse | 55 ms | 24 MB |
-
-*Hardware: Intel i7-10700K, 32GB RAM, Windows 10*
-
----
-
-## Use Case Examples
-
-### Case 1: Triple-labeled Confocal Image
-**Channels**: DAPI (blue), GFP (green), mCherry (red)  
-**Recommended**: Landini  
-**Why**: Distinct spectral channels benefit from RGB inversion
-
-### Case 2: Live-Cell Imaging (GFP/RFP)
-**Channels**: GFP, RFP  
-**Recommended**: HSL or CIELab  
-**Why**: Maintains exact color relationships for dual-color tracking
-
-### Case 3: Immunofluorescence with Autofluorescence
-**Channels**: Mixed specific signal + background  
-**Recommended**: ezReverse  
-**Why**: Can selectively invert background while preserving signal
-
-### Case 4: Widefield Fluorescence
-**Channels**: Single or dual  
-**Recommended**: YIQ  
-**Why**: Good balance of speed and perceptual uniformity
-
----
-
 ## References
 
 1. Landini, G. (2008). *How to correct background illumination in brightfield microscopy*. https://blog.bham.ac.uk/intellimic/g-landini-software/
