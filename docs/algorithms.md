@@ -6,8 +6,6 @@ This document provides detailed technical information about the white background
 
 1. [Mathematical Foundations](#mathematical-foundations)
 2. [Algorithm Implementations](#algorithm-implementations)
-3. [Performance Comparisons](#performance-comparisons)
-4. [Use Case Examples](#use-case-examples)
 
 ## Mathematical Foundations
 
@@ -111,15 +109,13 @@ def landini_inversion(image_rgb):
 - Excellent channel separation
 - Minimal color artifacts
 
-**Disadvantages**:
-- Can produce out-of-gamut colors (hence clipping)
-- Not perceptually uniform
-
-**Computational Complexity**: O(n) where n = number of pixels
+**Reference**: Landini, G. (2008). How to correct background illumination in brightfield microscopy. ImageJ Documentation. Available at: https://blog.bham.ac.uk/intellimic/g-landini-software/
 
 ---
 
 ### 2. HSL Inversion
+
+Converts to HSL (Hue, Saturation, Lightness) color space and inverts only the Lightness channel while preserving Hue and Saturation.
 
 **Pseudocode**:
 ```python
@@ -138,61 +134,65 @@ def hsl_inversion(image_rgb):
 - Intuitive color model
 - No clipping needed
 
-**Disadvantages**:
-- Color space conversion overhead
-- Can desaturate near black/white regions
-
-**Computational Complexity**: O(n) + conversion overhead
+**Reference**:
+- Song, X., & Goedhart, J. (2024). EzReverse – a Web Application for Background Adjustment of Color Images. bioRxiv. https://doi.org/10.1101/2024.05.27.594095
+- The HSL color model is described in: Ramanath, R., & Drew, M. S. (2021). Color Spaces. In K. Ikeuchi (Ed.), Computer Vision: A Reference Guide (pp. 184–194). Springer International Publishing. https://doi.org/10.1007/978-3-030-63416-2_452
 
 ---
 
-### 3. ezReverse (Replace Gray)
+### 3. YIQ Inversion
 
-**Pseudocode**:
-```python
-def ezreverse(image_rgb, tolerance=30):
-    R, G, B = split_channels(image_rgb)
-    
-    # Calculate standard deviation for each pixel
-    std_dev = sqrt(((R - mean)² + (G - mean)² + (B - mean)²) / 3)
-    
-    # Create gray mask
-    gray_mask = std_dev <= tolerance
-    
-    # Invert only gray pixels
-    result = image_rgb.copy()
-    result[gray_mask] = 255 - result[gray_mask]
-    
-    return result
-```
+Uses the NTSC YIQ color space, inverting luminance (Y) while preserving chrominance (I and Q).
 
-**Advantages**:
-- Preserves colored regions exactly
-- User-adjustable tolerance
-- Good for mixed content
+Best for: Images requiring broadcast-standard color representation.
 
-**Disadvantages**:
-- Requires parameter tuning
-- Can create visible boundaries
+**Reference**:
+- Song, X., & Goedhart, J. (2024). EzReverse – a Web Application for Background Adjustment of Color Images. bioRxiv. https://doi.org/10.1101/2024.05.27.594095
+- The YIQ color model is described in: Ramanath, R., & Drew, M. S. (2021). Color Spaces. In K. Ikeuchi (Ed.), Computer Vision: A Reference Guide (pp. 184–194). Springer International Publishing. https://doi.org/10.1007/978-3-030-63416-2_452
 
-**Computational Complexity**: O(n)
+---
+
+### 4. CIELab Inversion
+
+Converts to the CIE L*a*b* perceptually uniform color space and inverts the L* (lightness) channel.
+
+Best for: Images requiring device-independent color representation and perceptually accurate lightness inversion.
+
+**Reference**:
+- Song, X., & Goedhart, J. (2024). EzReverse – a Web Application for Background Adjustment of Color Images. bioRxiv. https://doi.org/10.1101/2024.05.27.594095
+- The CIELab color space is described in: Ramanath, R., & Drew, M. S. (2021). Color Spaces. In K. Ikeuchi (Ed.), Computer Vision: A Reference Guide (pp. 184–194). Springer International Publishing. https://doi.org/10.1007/978-3-030-63416-2_452
+
+---
+
+### 5. Replace Gray (ezReverse Method)
+
+Detects near-grayscale pixels (where R≈G≈B) using standard deviation thresholding and inverts only those pixels, leaving colored pixels unchanged.
+
+Algorithm: Pixels with std(R,G,B) < threshold are inverted, others remain unchanged.
+
+Best for: Images with predominantly grayscale backgrounds and clear distinction between colored and gray regions. This method maintains hues identical to the original.
+
+**Reference**:
+- Song, X., & Goedhart, J. (2024). EzReverse – a Web Application for Background Adjustment of Color Images. bioRxiv. https://doi.org/10.1101/2024.05.27.594095
 
 ---
 
 ## References
 
-1. Landini, G. (2008). *How to correct background illumination in brightfield microscopy*. https://blog.bham.ac.uk/intellimic/g-landini-software/
+1. **Song, X., & Goedhart, J. (2024).** EzReverse – a Web Application for Background Adjustment of Color Images. *bioRxiv*. https://doi.org/10.1101/2024.05.27.594095
+   - *Primary source for HSL, YIQ, CIELab, and Replace Gray methods*
 
-2. Levkowitz, H., & Herman, G. T. (1993). GLHS: A generalized lightness, hue, and saturation color model. *CVGIP: Graphical Models and Image Processing*, 55(4), 271-285.
+2. **Landini, G. (2008).** How to correct background illumination in brightfield microscopy. ImageJ Documentation. https://blog.bham.ac.uk/intellimic/g-landini-software/
+   - *Source for RGB channel inversion method*
 
-3. Fairchild, M. D. (2013). *Color Appearance Models* (3rd ed.). Wiley.
+3. **Ramanath, R., & Drew, M. S. (2021).** Color Spaces. In K. Ikeuchi (Ed.), *Computer Vision: A Reference Guide* (pp. 184–194). Springer International Publishing. https://doi.org/10.1007/978-3-030-63416-2_452
+   - *Foundational reference for color space theory*
 
-4. CIE. (2004). *Colorimetry* (3rd ed.). CIE Publication 15:2004.
+4. **Johnson, J. (2012).** Not seeing is not believing: improving the visibility of your fluorescence images. *Molecular Biology of the Cell*, 23(5), 754–757. https://doi.org/10.1091/mbc.e11-09-0824
+   - *Benefits of inverted backgrounds in fluorescence imaging*
 
-5. Yoshida, A., Razali, R., & Barry, C. (2020). Optimizing the color for displaying multichannel images. *Microscopy*, 69(3), 156-164.
-
-6. Smith, A. R. (1978). Color gamut transform pairs. *ACM SIGGRAPH Computer Graphics*, 12(3), 12-19.
-
----
+5. **Schneider, C. A., Rasband, W. S., & Eliceiri, K. W. (2012).** NIH Image to ImageJ: 25 years of image analysis. *Nature Methods*, 9(7), 671–675. https://doi.org/10.1038/nmeth.2089
+   - *ImageJ reference*
+```
 
 *Last updated: January 2025*
