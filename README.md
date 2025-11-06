@@ -25,7 +25,11 @@ A PyQt-based GUI tool for compositing multi-channel confocal microscopy images w
 ## Screenshots
 
 ![Main Interface](docs/images/screenshot_main.png)
-![White Background Example](docs/images/example_white_bg.png)
+
+### Before & After
+| Black Background | White Background |
+|------------------|------------------|
+| ![Before](docs/images/example_black_bg.png) | ![After](docs/images/example_white_bg.png) |
 
 ## Installation
 
@@ -54,12 +58,30 @@ Download the latest executable from [Releases](https://github.com/FranTassara/Ba
 
 ## Usage
 
-1. Load your confocal image (CZI, TIFF, or standard format)
-2. Adjust per-channel settings (LUT, contrast, filters)
-3. Choose background color and method
-4. Add scale bar if needed
-5. Export your publication-ready image
+1. **Load your image**: Click "Load Image" and select your CZI, TIFF, or standard image file
+2. **Adjust channels**: Use the right panel to modify LUT, contrast, and apply filters for each channel
+3. **Choose background**: Select white or black background with your preferred conversion method
+4. **Add scale bar**: Enable and customize the scale bar in the left panel (calibration read from metadata)
+5. **Export**: Click "Export Image" to save your publication-ready figure
 
-## License
+## White Background Algorithms
 
-LGPL v3 - See LICENSE file for details
+BackFlip offers multiple algorithms for optimal results:
+
+- **Landini (RGB)**: Gabriel Landini's channel inversion method - best for most multi-channel images
+- **HSL/YIQ/CIELab Inversion**: Color space transformations that preserve hue while inverting lightness
+- **ezReverse**: Gray pixel detection and replacement - ideal for images with pure grayscale backgrounds
+
+Choose the method that works best for your specific image.
+
+## 📄 License
+
+This project is licensed under the GNU Lesser General Public License v3.0 (LGPL v3)
+
+## 🙏 Acknowledgments
+
+- White background algorithms inspired by [Gabriel Landini's ImageJ work](https://blog.bham.ac.uk/intellimic/g-landini-software/)
+- Built with [PySide6](https://wiki.qt.io/Qt_for_Python) (Qt for Python)
+- Thanks to the microscopy community for testing and feedback
+
+**BackFlip** - *Flip your backgrounds, not your workflow.*
