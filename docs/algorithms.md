@@ -191,8 +191,6 @@ Best for: Images with predominantly grayscale backgrounds and clear distinction 
 4. **Johnson, J. (2012).** Not seeing is not believing: improving the visibility of your fluorescence images. *Molecular Biology of the Cell*, 23(5), 754–757. https://doi.org/10.1091/mbc.e11-09-0824
    - *Benefits of inverted backgrounds in fluorescence imaging*
 
-5. **Schneider, C. A., Rasband, W. S., & Eliceiri, K. W. (2012).** NIH Image to ImageJ: 25 years of image analysis. *Nature Methods*, 9(7), 671–675. https://doi.org/10.1038/nmeth.2089
-   - *ImageJ reference*
 ```
 
 *Last updated: January 2025*
