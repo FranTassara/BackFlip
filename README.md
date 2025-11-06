@@ -74,11 +74,11 @@ BackFlip offers multiple algorithms for optimal results:
 
 Choose the method that works best for your specific image.
 
-## 📄 License
+## License
 
 This project is licensed under the GNU Lesser General Public License v3.0 (LGPL v3)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - White background algorithms inspired by [Gabriel Landini's ImageJ work](https://blog.bham.ac.uk/intellimic/g-landini-software/)
 - Built with [PySide6](https://wiki.qt.io/Qt_for_Python) (Qt for Python)
