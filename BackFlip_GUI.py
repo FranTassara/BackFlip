@@ -642,6 +642,7 @@ class BackFlipGUI(QMainWindow):
         # Internal widget with all controls
         inner_widget = QWidget()
         layout = QVBoxLayout()
+        layout.setContentsMargins(6, 6, 12, 6)
 
         # ========================================
         # 1. LOAD FILE
@@ -738,11 +739,14 @@ class BackFlipGUI(QMainWindow):
         proj_group = QGroupBox("Z-Projection")
         proj_layout = QVBoxLayout()
         
-        proj_layout.addWidget(QLabel("Projection Type:"))
+        proj_row = QHBoxLayout()
+        proj_row.addWidget(QLabel("Projection Type:"))
         self.projection_combo = QComboBox()
         self.projection_combo.addItems(["Maximum Intensity", "Average Intensity", "Sum Intensity"])
         self.projection_combo.currentIndexChanged.connect(self.on_projection_change)
-        proj_layout.addWidget(self.projection_combo)
+        proj_row.addWidget(self.projection_combo)
+        proj_row.addStretch()
+        proj_layout.addLayout(proj_row)
         
         proj_group.setLayout(proj_layout)
         layout.addWidget(proj_group)
@@ -792,58 +796,88 @@ class BackFlipGUI(QMainWindow):
         scale_layout.addWidget(self.scale_enabled)
         
         # Length in microns
-        scale_layout.addWidget(QLabel("Length (μm):"))
+        length_row = QHBoxLayout()
+        length_lbl = QLabel("Length (μm):")
+
         self.scale_length = QSpinBox()
         self.scale_length.setRange(1, 1000)
         self.scale_length.setValue(10)
         self.scale_length.valueChanged.connect(self.update_preview)
-        scale_layout.addWidget(self.scale_length)
-        
+        length_row.addWidget(length_lbl)
+        length_row.addWidget(self.scale_length)
+        length_row.addStretch()
+        scale_layout.addLayout(length_row)
+
         # Pixel size (μm per pixel)
-        scale_layout.addWidget(QLabel("Pixel size (μm/px):"))
+        pixsize_row = QHBoxLayout()
+        pixsize_lbl = QLabel("Pixel size (μm/px):")
+
         self.pixel_size = QDoubleSpinBox()
         self.pixel_size.setRange(0.001, 10.0)
         self.pixel_size.setValue(0.1)
         self.pixel_size.setDecimals(4)
         self.pixel_size.setSingleStep(0.01)
         self.pixel_size.valueChanged.connect(self.update_preview)
-        scale_layout.addWidget(self.pixel_size)
-        
+        pixsize_row.addWidget(pixsize_lbl)
+        pixsize_row.addWidget(self.pixel_size)
+        pixsize_row.addStretch()
+        scale_layout.addLayout(pixsize_row)
+
         # Bar thickness
-        scale_layout.addWidget(QLabel("Bar thickness (px):"))
+        thickness_row = QHBoxLayout()
+        thickness_lbl = QLabel("Bar thickness (px):")
+
         self.scale_thickness = QSpinBox()
         self.scale_thickness.setRange(1, 50)
         self.scale_thickness.setValue(5)
         self.scale_thickness.valueChanged.connect(self.update_preview)
-        scale_layout.addWidget(self.scale_thickness)
-        
+        thickness_row.addWidget(thickness_lbl)
+        thickness_row.addWidget(self.scale_thickness)
+        thickness_row.addStretch()
+        scale_layout.addLayout(thickness_row)
+
         # Position
-        scale_layout.addWidget(QLabel("Position:"))
+        position_row = QHBoxLayout()
+        position_lbl = QLabel("Position:")
+
         self.scale_position = QComboBox()
         self.scale_position.addItems(["Bottom Right", "Bottom Left", "Top Right", "Top Left"])
         self.scale_position.currentIndexChanged.connect(self.update_preview)
-        scale_layout.addWidget(self.scale_position)
-        
+        position_row.addWidget(position_lbl)
+        position_row.addWidget(self.scale_position)
+        position_row.addStretch()
+        scale_layout.addLayout(position_row)
+
         # Color
-        scale_layout.addWidget(QLabel("Color:"))
+        color_row = QHBoxLayout()
+        color_lbl = QLabel("Color:")
+
         self.scale_color = QComboBox()
         self.scale_color.addItems(["White", "Black"])
         self.scale_color.currentIndexChanged.connect(self.update_preview)
-        scale_layout.addWidget(self.scale_color)
-        
+        color_row.addWidget(color_lbl)
+        color_row.addWidget(self.scale_color)
+        color_row.addStretch()
+        scale_layout.addLayout(color_row)
+
         # Show label
         self.scale_show_label = QCheckBox("Show label")
         self.scale_show_label.setChecked(True)
         self.scale_show_label.stateChanged.connect(self.update_preview)
         scale_layout.addWidget(self.scale_show_label)
-        
+
         # Font size
-        scale_layout.addWidget(QLabel("Font size:"))
+        fontsize_row = QHBoxLayout()
+        fontsize_lbl = QLabel("Font size:")
+
         self.scale_font_size = QSpinBox()
         self.scale_font_size.setRange(8, 72)
         self.scale_font_size.setValue(12)
         self.scale_font_size.valueChanged.connect(self.update_preview)
-        scale_layout.addWidget(self.scale_font_size)
+        fontsize_row.addWidget(fontsize_lbl)
+        fontsize_row.addWidget(self.scale_font_size)
+        fontsize_row.addStretch()
+        scale_layout.addLayout(fontsize_row)
         
         scale_group.setLayout(scale_layout)
         layout.addWidget(scale_group)
