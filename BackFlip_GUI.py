@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 import numpy as np
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
@@ -35,6 +36,32 @@ SCALE_BAR_FALLBACK_WIDTH_PERCENT = 0.3
 # Export Quality Settings
 JPEG_QUALITY = 95
 PNG_COMPRESSION = 9
+
+# ============================================================================
+# EXTERNAL LUT LOADER
+# ============================================================================
+
+def _load_external_luts() -> dict:
+    """Load all .lut files from the luts/ directory adjacent to this script."""
+    luts = {}
+    luts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "luts")
+    if not os.path.isdir(luts_dir):
+        return luts
+    for fname in sorted(os.listdir(luts_dir)):
+        if not fname.endswith(".lut"):
+            continue
+        path = os.path.join(luts_dir, fname)
+        try:
+            data = np.loadtxt(path, dtype=np.uint8, delimiter="\t", skiprows=1,
+                              usecols=(1, 2, 3))
+            if data.shape == (256, 3):
+                name = fname.replace("_", " ").replace(".lut", "")
+                luts[name] = data
+        except Exception:
+            pass
+    return luts
+
+EXTERNAL_LUTS: dict = _load_external_luts()
 
 
 class TiffTypeDialog(QDialog):
@@ -183,8 +210,30 @@ class ChannelControl(QWidget):
         # LUT Selector
         layout.addWidget(QLabel("LUT:"))
         self.lut_combo = QComboBox()
-        self.lut_combo.addItems(["Gray", "Red", "Green", "Blue", "Cyan", "Magenta", "Yellow", "Custom RGB"])
         self.lut_combo.setMaximumWidth(200)
+
+        # Built-in LUTs
+        builtin = ["Gray", "Red", "Green", "Blue", "Cyan", "Magenta", "Yellow", "Custom RGB"]
+        self.lut_combo.addItems(builtin)
+
+        # External LUTs grouped by series
+        if EXTERNAL_LUTS:
+            groups = {"I": [], "BOP": [], "OPF": [], "Other": []}
+            for name in sorted(EXTERNAL_LUTS.keys()):
+                if name.startswith("I "):
+                    groups["I"].append(name)
+                elif name.startswith("BOP"):
+                    groups["BOP"].append(name)
+                elif name.startswith("OPF"):
+                    groups["OPF"].append(name)
+                else:
+                    groups["Other"].append(name)
+            for group_label, names in groups.items():
+                if names:
+                    self.lut_combo.insertSeparator(self.lut_combo.count())
+                    for name in names:
+                        self.lut_combo.addItem(name)
+
         self.lut_combo.currentIndexChanged.connect(self.on_lut_change)
         layout.addWidget(self.lut_combo)
 
@@ -673,7 +722,13 @@ class BackFlipGUI(QMainWindow):
         self.replace_tolerance_widget.setLayout(replace_layout)
         self.replace_tolerance_widget.setVisible(False)
         bg_layout.addWidget(self.replace_tolerance_widget)
-        
+
+        # LUT status label — shows info (I-series) or warning (mismatch), hidden by default
+        self.lut_status_label = QLabel()
+        self.lut_status_label.setWordWrap(True)
+        self.lut_status_label.setVisible(False)
+        bg_layout.addWidget(self.lut_status_label)
+
         bg_group.setLayout(bg_layout)
         layout.addWidget(bg_group)
         
@@ -1380,7 +1435,10 @@ class BackFlipGUI(QMainWindow):
             rgb[:, :, 0] = (data * (r / 255.0)).astype(np.uint8)
             rgb[:, :, 1] = (data * (g / 255.0)).astype(np.uint8)
             rgb[:, :, 2] = (data * (b / 255.0)).astype(np.uint8)
-        
+        elif lut_name in EXTERNAL_LUTS:
+            lut_array = EXTERNAL_LUTS[lut_name]
+            rgb = lut_array[data]
+
         return rgb
     
     def process_channel(self, channel_data: np.ndarray, settings: dict) -> np.ndarray:
@@ -1625,9 +1683,18 @@ class BackFlipGUI(QMainWindow):
             channel_rgb_list.append(channel_rgb)
             enabled_indices.append(i)
 
+        # Update Background Color controls and status label based on LUT types
+        self._update_bg_controls_state(enabled_indices)
+
         # Combine channels based on background mode
-        if self.white_radio.isChecked():
-            # WHITE BACKGROUND: use selected method
+        use_multiplicative = self._all_channels_inverted_lut(enabled_indices)
+
+        if use_multiplicative:
+            # I-series LUTs encode white background directly — use multiplicative
+            # blending (identical to ImageJ/Fiji behavior for inverted LUTs).
+            composite = self.compose_multiplicative(channel_rgb_list, h, w)
+        elif self.white_radio.isChecked():
+            # WHITE BACKGROUND: use selected method (expects black-bg inputs)
             method = self.white_method_combo.currentText()
 
             if method == "Subtractive RGB":
@@ -1708,6 +1775,83 @@ class BackFlipGUI(QMainWindow):
         ], axis=2)
 
         return composite
+
+    def _all_channels_inverted_lut(self, enabled_indices: list) -> bool:
+        """Return True if all active channels use a white-background (I-series) LUT."""
+        if not enabled_indices:
+            return False
+        for i in enabled_indices:
+            lut_name = self.channel_controls[i].get_settings()['lut']
+            if lut_name not in EXTERNAL_LUTS or not np.all(EXTERNAL_LUTS[lut_name][0] == 255):
+                return False
+        return True
+
+    def _update_bg_controls_state(self, enabled_indices: list) -> None:
+        """Update Background Color controls and status label based on active LUT types.
+
+        Three states:
+        - All I-series: disable controls (always white bg), show info label.
+        - Mixed I-series + standard: keep controls enabled, show warning label.
+        - All standard: enable controls normally, hide label.
+        """
+        all_inv = self._all_channels_inverted_lut(enabled_indices)
+        mixed   = self._has_lut_mismatch(enabled_indices)
+
+        # Enable/disable the background selector controls
+        bg_controls_enabled = not all_inv
+        self.white_radio.setEnabled(bg_controls_enabled)
+        self.black_radio.setEnabled(bg_controls_enabled)
+        self.white_method_combo.setEnabled(bg_controls_enabled)
+
+        if all_inv:
+            self.lut_status_label.setText(
+                "<b>ℹ I-series LUTs:</b> these LUTs are designed for white background "
+                "only. Background color selection is disabled — the composite is always "
+                "rendered on a white background using multiplicative compositing."
+            )
+            self.lut_status_label.setStyleSheet(
+                "color: #084298; background-color: #cfe2ff; "
+                "border: 1px solid #9ec5fe; border-radius: 4px; padding: 6px;"
+            )
+            self.lut_status_label.setVisible(True)
+        elif mixed:
+            self.lut_status_label.setText(
+                "<b>⚠ LUT mismatch:</b> I-series LUTs (e.g. I Blue, I Red) are "
+                "designed for white background only. Standard LUTs (e.g. Red, Green, "
+                "BOP) support both black and white backgrounds. Mixing them produces "
+                "incorrect results — use the same LUT type across all channels."
+            )
+            self.lut_status_label.setStyleSheet(
+                "color: #7a4f00; background-color: #fff3cd; "
+                "border: 1px solid #ffc107; border-radius: 4px; padding: 6px;"
+            )
+            self.lut_status_label.setVisible(True)
+        else:
+            self.lut_status_label.setVisible(False)
+
+    def _has_lut_mismatch(self, enabled_indices: list) -> bool:
+        """Return True if active channels mix inverted (I-series) and standard LUTs."""
+        if len(enabled_indices) < 2:
+            return False
+        inverted_flags = []
+        for i in enabled_indices:
+            lut_name = self.channel_controls[i].get_settings()['lut']
+            is_inverted = (lut_name in EXTERNAL_LUTS and np.all(EXTERNAL_LUTS[lut_name][0] == 255))
+            inverted_flags.append(is_inverted)
+        return any(inverted_flags) and not all(inverted_flags)
+
+    def compose_multiplicative(self, channel_rgb_list: list, h: int, w: int) -> np.ndarray:
+        """
+        Multiplicative compositing for white-background (I-series) LUTs.
+        White (255,255,255) is the identity: white x color = color.
+        Produces correct multi-channel white-background images without
+        any additional inversion step.
+        """
+        composite = np.ones((h, w, 3), dtype=np.float32)
+        for ch in channel_rgb_list:
+            if ch is not None:
+                composite *= ch.astype(np.float32) / 255.0
+        return np.clip(composite * 255.0, 0, 255).astype(np.uint8)
 
     def rgb_to_hls_custom(self, rgb_image: np.ndarray) -> np.ndarray:
         """Convert RGB to HLS using colorsys (as in ezReverse)."""
