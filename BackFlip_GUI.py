@@ -264,7 +264,22 @@ class ChannelControl(QWidget):
         # Brightness
         self.brightness_slider = self.create_slider("Brightness:", -100, 100, 0)
         layout.addLayout(self.brightness_slider['layout'])
-        
+
+        # Gamma correction
+        gamma_layout = QHBoxLayout()
+        gamma_label = QLabel("Gamma:")
+        gamma_label.setMinimumWidth(90)
+        self.gamma_spinbox = QDoubleSpinBox()
+        self.gamma_spinbox.setRange(0.10, 3.00)
+        self.gamma_spinbox.setValue(1.00)
+        self.gamma_spinbox.setSingleStep(0.05)
+        self.gamma_spinbox.setDecimals(2)
+        self.gamma_spinbox.setMaximumWidth(80)
+        self.gamma_spinbox.valueChanged.connect(self.on_change)
+        gamma_layout.addWidget(gamma_label)
+        gamma_layout.addWidget(self.gamma_spinbox)
+        gamma_layout.addStretch()
+        layout.addLayout(gamma_layout)
 
         # Background removal
         bg_group = QGroupBox("Background Removal")
@@ -464,6 +479,7 @@ class ChannelControl(QWidget):
             'min_intensity': self.min_slider['slider'].value(),
             'max_intensity': self.max_slider['slider'].value(),
             'brightness': self.brightness_slider['slider'].value(),
+            'gamma': self.gamma_spinbox.value(),
             # Background removal methods
             'bg_gaussian': self.bg_gaussian_enabled.isChecked(),
             'gaussian_sigma': self.gaussian_sigma.value(),
@@ -1521,6 +1537,12 @@ class BackFlipGUI(QMainWindow):
             data = np.zeros_like(data)
 
         data = np.clip(data, 0, 255)
+
+        # Gamma correction (applied after contrast, before brightness)
+        gamma = settings.get('gamma', 1.0)
+        if gamma != 1.0:
+            data = np.power(data / 255.0, 1.0 / gamma) * 255.0
+            data = np.clip(data, 0, 255)
 
         # Brightness adjustment
         brightness = settings['brightness']

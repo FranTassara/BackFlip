@@ -12,7 +12,7 @@ __pycache__/
 *.exe
 dist/
 build/
-*.spec
+*.spec.bak
 
 # IDE
 .vscode/
