@@ -1105,6 +1105,14 @@ class BackFlipGUI(QMainWindow):
                 self.composite_zstack = None
                 self.projection_combo.setEnabled(False)
             
+            # Normalize float images to uint8 range before storing
+            if img.dtype in (np.float32, np.float64):
+                max_val = img.max()
+                if max_val <= 1.0:
+                    img = (img * 255.0).clip(0, 255)
+                else:
+                    img = img.clip(0, 255)
+
             # Store as composite
             self.is_composite = True
             self.composite_image = img.astype(np.uint8)
@@ -1235,8 +1243,19 @@ class BackFlipGUI(QMainWindow):
                     self.num_channels = 1
                     self.image_data.append(img[np.newaxis, :, :])
 
-            # Detect bit depth
+            # Normalize float channels to uint16 range before bit depth detection
             sample_dtype = self.image_data[0].dtype
+            if sample_dtype in (np.float32, np.float64):
+                global_max = max(np.max(ch) for ch in self.image_data)
+                if global_max <= 1.0:
+                    self.image_data = [(ch * 65535.0).clip(0, 65535).astype(np.uint16)
+                                       for ch in self.image_data]
+                else:
+                    self.image_data = [ch.clip(0, 65535).astype(np.uint16)
+                                       for ch in self.image_data]
+                sample_dtype = np.uint16
+
+            # Detect bit depth
             if sample_dtype == np.uint8:
                 self.bit_depth = 8
                 self.max_intensity_value = 255
